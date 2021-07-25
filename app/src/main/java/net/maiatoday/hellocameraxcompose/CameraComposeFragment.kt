@@ -5,18 +5,25 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.camera.core.ImageCapture
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Button
 import androidx.compose.material.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.navigation.fragment.findNavController
+import net.maiatoday.hellocameraxcompose.ui.CameraPreview
 import net.maiatoday.hellocameraxcompose.ui.theme.HelloCameraXComposeTheme
 
 /**
  * A simple [Fragment] subclass To hold the compose version of the camera implementaion
  */
 class CameraComposeFragment : Fragment() {
-
+    private var imageCapture: ImageCapture? = ImageCapture.Builder()
+        .build()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -24,17 +31,18 @@ class CameraComposeFragment : Fragment() {
         return ComposeView(requireContext()).apply {
             setContent {
                 HelloCameraXComposeTheme() {
-                    Column {
-                        Text(text = "Hello world.")
-                        Button(onClick = {
-                            // TODO: 2021/07/25  take photo stuff here
-                        }) {
-                            Text(text = getString(R.string.take_photo))
-                        }
-                        Button(onClick = {
-                            findNavController().navigate(R.id.action_ComposeFragment_to_FirstFragment)
-                        }) {
-                            Text(text = getString(R.string.previous))
+                    Box(Modifier.fillMaxSize()) {
+                        CameraPreview(imageCapture)
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.Bottom,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Button(onClick = {
+                                takePhoto(imageCapture, requireContext())
+                            }) {
+                                Text(text = getString(R.string.take_photo))
+                            }
                         }
                     }
                 }
