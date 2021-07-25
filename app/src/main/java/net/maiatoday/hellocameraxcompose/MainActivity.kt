@@ -16,6 +16,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import com.google.android.material.snackbar.Snackbar
 import net.maiatoday.hellocameraxcompose.databinding.ActivityMainBinding
 import net.maiatoday.hellocameraxcompose.ui.theme.HelloCameraXComposeTheme
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 

@@ -53,9 +53,6 @@ android {
 }
 
 dependencies {
-    val hiltVersion = "2.36"
-    val hiltNavComposeVersion = "1.0.0-alpha02"
-
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.3.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1")
@@ -74,10 +71,19 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.3.0-rc02")
     implementation("androidx.navigation:navigation-compose:2.4.0-alpha05")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$composeVersion")
+    implementation("androidx.camera:camera-view:1.0.0-alpha27")
 
     // Camera
+    val cameraXVersion = "1.0.1"
+    implementation("androidx.camera:camera-core:$cameraXVersion")
+    implementation("androidx.camera:camera-lifecycle:$cameraXVersion")
+    // CameraX core library using camera2 implementation
+    implementation("androidx.camera:camera-camera2:$cameraXVersion")
+    // CameraX View class
+    implementation("androidx.camera:camera-view:1.0.0-alpha27")
 
     // Hilt
+    val hiltVersion = "2.36"
     implementation("com.google.dagger:hilt-android:$hiltVersion")
     kapt("com.google.dagger:hilt-compiler:$hiltVersion")
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0-alpha03")
