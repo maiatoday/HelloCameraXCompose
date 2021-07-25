@@ -1,6 +1,7 @@
 package net.maiatoday.hellocameraxcompose.ui
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
@@ -15,9 +16,14 @@ import net.maiatoday.hellocameraxcompose.CameraActivity
 fun Navigation(navController: NavHostController) {
     NavHost(navController, startDestination = NavigationDirections.overview.destination) {
         composable(route = NavigationDirections.overview.destination) {
+            val context = LocalContext.current
             OverviewScreen(
-                onComposeCamera = { navController.navigate(NavigationDirections.cameraPreview.destination) },
-                onViewCamera = { navController.navigate(NavigationDirections.cameraPreviewView.destination) },
+                onComposeCamera = {
+                    Toast.makeText(context, "going to compose world camera", Toast.LENGTH_SHORT).show()
+                    navController.navigate(NavigationDirections.cameraPreview.destination) },
+                onViewCamera = {
+                    Toast.makeText(context, "going to classic Android camera", Toast.LENGTH_SHORT).show()
+                    navController.navigate(NavigationDirections.cameraPreviewView.destination) },
             )
         }
         composable(route = NavigationDirections.cameraPreview.destination) {

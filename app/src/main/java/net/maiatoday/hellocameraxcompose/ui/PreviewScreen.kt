@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -22,17 +24,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import net.maiatoday.hellocameraxcompose.R
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.Executor
 
 @Composable
 fun PreviewScreen() {
-
-    val outputDirectory = getOutputDirectory(LocalContext.current)
+    val context = LocalContext.current
+    val outputDirectory = remember { getOutputDirectory(context) }
+    val executor = ContextCompat.getMainExecutor(context)
     Box(Modifier.fillMaxSize()) {
         SimpleCameraPreview()
         Column(
@@ -40,9 +45,18 @@ fun PreviewScreen() {
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Button(onClick = {
-                takePhoto(outputDirectory)
-            /*takePhoto(LocalContext.current, )*/}) // Aargh how to transition from the composable world to the classic world
+            Button(
+                modifier = Modifier.padding(8.dp),
+                elevation = ButtonDefaults.elevation(
+                    defaultElevation = 6.dp,
+                    pressedElevation = 8.dp,
+                    disabledElevation = 0.dp
+                ),
+                onClick = {
+                    takePhoto(outputDirectory, executor) { message ->
+                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                    }
+                })
             { Text("Take Photo") }
         }
     }
@@ -81,12 +95,14 @@ fun SimpleCameraPreview() {
     )
 }
 
-private fun takePhoto(outputDirectory: File) {
-    // Aaargh!!!! again transitions are messy, State of the camera and
-    // events are bleeding into compose land
+private fun takePhoto(
+    outputDirectory: File,
+    executor: Executor,
+    showToast: (message: String) -> Unit
+) {
     val imageCapture = ImageCapture.Builder()
         .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-       // .setTargetRotation(rotation)
+        // .setTargetRotation(rotation)
         .build()
 
     // Create time-stamped output file to hold the image
@@ -94,28 +110,25 @@ private fun takePhoto(outputDirectory: File) {
         outputDirectory,
         SimpleDateFormat(
             FILENAME_FORMAT, Locale.US
-        ).format(System.currentTimeMillis()) + ".jpg")
+        ).format(System.currentTimeMillis()) + ".jpg"
+    )
 
     // Create output options object which contains file + metadata
     val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
     // Set up image capture listener, which is triggered after photo has
     // been taken
-//    imageCapture.takePicture(
-//        outputOptions, ContextCompat.getMainExecutor(context), object : ImageCapture.OnImageSavedCallback {
-//            override fun onError(exc: ImageCaptureException) {
-//                Log.e("Compose", "Photo capture failed: ${exc.message}", exc)
-//            }
-//
-//            override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-//                val savedUri = Uri.fromFile(photoFile)
-//                val msg = "Photo capture succeeded: $savedUri"
-////                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-////                Log.d("Compose", msg)
-//            }
-//        })
+    imageCapture.takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
+        override fun onError(exc: ImageCaptureException) {
+            Log.e("Compose", "Photo capture failed: ${exc.message}", exc)
+        }
 
-
+        override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+            val savedUri = Uri.fromFile(photoFile)
+            val msg = "Photo capture succeeded: $savedUri"
+            showToast(msg)
+        }
+    })
 }
 
 private fun getOutputDirectory(context: Context): File {
@@ -127,23 +140,3 @@ private fun getOutputDirectory(context: Context): File {
 }
 
 private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
-
-//private fun capture() {
-//    // Create output file to hold the image
-//    val photoFile = createFile(outputFolder, FILENAME, PHOTO_EXTENSION)
-//
-//    // Create output options object which contains file + metadata
-//    val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile)
-//        .build()
-//
-//    imageCapture.takePicture(outputOptions, Executors.newSingleThreadExecutor(),
-//        object : ImageCapture.OnImageSavedCallback {
-//            override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-//                captureFileUri = output.savedUri ?: Uri.fromFile(photoFile)
-//                Log.d(TAG, "Photo capture succeeded: $captureFileUri")
-//            }
-//            override fun onError(exception: ImageCaptureException) {
-//                Log.e(TAG, "Photo capture exception: $exception")
-//            }
-//        })
-//}
