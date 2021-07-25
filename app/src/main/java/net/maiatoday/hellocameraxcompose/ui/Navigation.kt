@@ -8,6 +8,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NamedNavArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import net.maiatoday.hellocameraxcompose.CameraActivity
 
 @ExperimentalAnimationApi
 @Composable
@@ -20,14 +21,11 @@ fun Navigation(navController: NavHostController) {
             )
         }
         composable(route = NavigationDirections.cameraPreview.destination) {
-            // navigate to old view fragment
-//            val viewModel: CounterViewModel = hiltViewModel()
-//            val count by viewModel.counter.collectAsState()
-        //    CameraPreview()
+            PreviewScreen()
         }
         composable(route = NavigationDirections.cameraPreviewView.destination) {
-//            val context = LocalContext
-//            context.startActivity(Intent(context, CameraActivity::class.java))
+            val context = LocalContext.current
+            context.startActivity(Intent(context, CameraActivity::class.java))
         }
     }
 }

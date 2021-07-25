@@ -27,7 +27,7 @@ fun OverviewScreen(
                 Text("CameraX in compose")
             }
             Button(onClick = onViewCamera) {
-                Text("CameraX view")
+                Text("CameraX in classic")
             }
         }
     }

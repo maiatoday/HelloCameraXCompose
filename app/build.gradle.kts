@@ -1,19 +1,22 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
+    id("kotlin-android-extensions")
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
+    id("org.jetbrains.kotlin.android")
 }
 
 //TODO clean up an put somewhere central
 val composeVersion = "1.0.0-rc01"
+val cameraxVersion = "1.0.0"
 
 android {
     compileSdk = 30
     buildToolsVersion = "30.0.3"
 
     defaultConfig {
-        applicationId = "net.maiatoday.esw"
+        applicationId = "net.maiatoday.hellocameraxcompose"
         minSdk = 21
         targetSdk = 30
         versionCode = 1
@@ -66,8 +69,17 @@ dependencies {
     implementation("androidx.navigation:navigation-ui-ktx:$navVersion")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$composeVersion")
     implementation("com.google.dagger:hilt-android:$hiltVersion")
+    implementation("androidx.constraintlayout:constraintlayout:2.0.4")
     kapt("com.google.dagger:hilt-compiler:$hiltVersion")
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0-alpha03")
+
+// CameraX core library using camera2 implementation
+    implementation("androidx.camera:camera-camera2:$cameraxVersion")
+// CameraX Lifecycle Library
+    implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
+// CameraX View class
+    implementation("androidx.camera:camera-view:1.0.0-alpha27")
+
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.3")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
