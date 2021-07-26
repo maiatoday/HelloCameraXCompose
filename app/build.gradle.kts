@@ -14,7 +14,7 @@ android {
     buildToolsVersion = "30.0.3"
 
     defaultConfig {
-        applicationId = "net.maiatoday.esw"
+        applicationId = "net.maiatoday.hellocameraxcompose"
         minSdk = 21
         targetSdk = 30
         versionCode = 1
@@ -72,6 +72,9 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.4.0-alpha05")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$composeVersion")
     implementation("androidx.camera:camera-view:1.0.0-alpha27")
+
+    // Preferences
+    implementation ("com.google.accompanist:accompanist-permissions:0.14.0")
 
     // Camera
     val cameraXVersion = "1.0.1"
