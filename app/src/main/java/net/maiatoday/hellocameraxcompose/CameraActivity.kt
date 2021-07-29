@@ -3,14 +3,23 @@ package net.maiatoday.hellocameraxcompose
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.ImageFormat
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
 import android.net.Uri
 import android.util.Log
+import android.util.Rational
+import android.util.Size
+import android.view.Surface.ROTATION_0
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import java.util.concurrent.Executors
 import androidx.camera.core.*
+import androidx.camera.core.ImageCapture.Builder.fromConfig
 import androidx.camera.lifecycle.ProcessCameraProvider
 import kotlinx.android.synthetic.main.activity_camera.*
 import java.io.File
@@ -27,6 +36,8 @@ class CameraActivity : AppCompatActivity() {
     private lateinit var outputDirectory: File
     private lateinit var cameraExecutor: ExecutorService
 
+    @androidx.camera.lifecycle.ExperimentalUseCaseGroupLifecycle
+    @androidx.camera.core.ExperimentalUseCaseGroup
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
@@ -55,8 +66,10 @@ class CameraActivity : AppCompatActivity() {
         // Create time-stamped output file to hold the image
         val photoFile = File(
             outputDirectory,
-            SimpleDateFormat(FILENAME_FORMAT, Locale.US
-            ).format(System.currentTimeMillis()) + ".jpg")
+            SimpleDateFormat(
+                FILENAME_FORMAT, Locale.US
+            ).format(System.currentTimeMillis()) + ".jpg"
+        )
 
         // Create output options object which contains file + metadata
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
@@ -64,7 +77,9 @@ class CameraActivity : AppCompatActivity() {
         // Set up image capture listener, which is triggered after photo has
         // been taken
         imageCapture.takePicture(
-            outputOptions, ContextCompat.getMainExecutor(this), object : ImageCapture.OnImageSavedCallback {
+            outputOptions,
+            ContextCompat.getMainExecutor(this),
+            object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
                     Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
                 }
@@ -78,7 +93,22 @@ class CameraActivity : AppCompatActivity() {
             })
     }
 
+    @androidx.camera.lifecycle.ExperimentalUseCaseGroupLifecycle
+    @androidx.camera.core.ExperimentalUseCaseGroup
     private fun startCamera() {
+
+        val manager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        val cameraId = manager.cameraIdList.firstOrNull{
+            manager.getCameraCharacteristics(it).get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT
+        } ?: return
+        val characteristics = manager.getCameraCharacteristics(cameraId)
+        val map =
+            characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP) ?: return
+        val imageSizes = map.getOutputSizes(ImageFormat.JPEG)
+        val resolution =
+            imageSizes.map { Size(it.width, it.height) }
+                .minByOrNull { it.width * it.height } ?: return
+
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
         cameraProviderFuture.addListener(Runnable {
@@ -93,6 +123,8 @@ class CameraActivity : AppCompatActivity() {
                 }
 
             imageCapture = ImageCapture.Builder()
+                .setTargetResolution(resolution)
+                .setFlashMode(ImageCapture.FLASH_MODE_ON)
                 .build()
 
             val imageAnalyzer = ImageAnalysis.Builder()
@@ -104,7 +136,17 @@ class CameraActivity : AppCompatActivity() {
                 }
 
             // Select back camera as a default
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+            val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+
+            val viewPort =  ViewPort.Builder(Rational(1, 2), preview.targetRotation)
+                .build()
+
+            val useCaseGroup = UseCaseGroup.Builder()
+                .addUseCase(preview)
+                .addUseCase(imageAnalyzer)
+                .addUseCase(imageCapture!!)
+                .setViewPort(viewPort)
+                .build()
 
             try {
                 // Unbind use cases before rebinding
@@ -112,9 +154,10 @@ class CameraActivity : AppCompatActivity() {
 
                 // Bind use cases to camera
                 cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageCapture, imageAnalyzer)
+                    this, cameraSelector, useCaseGroup
+                )
 
-            } catch(exc: Exception) {
+            } catch (exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
             }
 
@@ -140,10 +183,13 @@ class CameraActivity : AppCompatActivity() {
         cameraExecutor.shutdown()
     }
 
+    @androidx.camera.lifecycle.ExperimentalUseCaseGroupLifecycle
+    @androidx.camera.core.ExperimentalUseCaseGroup
     override fun onRequestPermissionsResult(
         requestCode: Int, permissions: Array<String>, grantResults:
         IntArray
     ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
                 startCamera()
