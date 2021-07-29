@@ -100,14 +100,14 @@ class CameraActivity : AppCompatActivity() {
         val manager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
         val cameraId = manager.cameraIdList.firstOrNull{
             manager.getCameraCharacteristics(it).get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT
-        } ?: return
+        } ?: CameraCharacteristics.LENS_FACING_FRONT.toString()
         val characteristics = manager.getCameraCharacteristics(cameraId)
         val map =
-            characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP) ?: return
-        val imageSizes = map.getOutputSizes(ImageFormat.JPEG)
+            characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+        val imageSizes = map?.getOutputSizes(ImageFormat.JPEG)
         val resolution =
-            imageSizes.map { Size(it.width, it.height) }
-                .minByOrNull { it.width * it.height } ?: return
+            imageSizes?.map { Size(it.width, it.height) }
+                ?.minByOrNull { it.width * it.height } ?: return
 
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
@@ -136,16 +136,16 @@ class CameraActivity : AppCompatActivity() {
                 }
 
             // Select back camera as a default
-            val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
-            val viewPort =  ViewPort.Builder(Rational(1, 2), preview.targetRotation)
-                .build()
+//            val viewPort =  ViewPort.Builder(Rational(1, 2), preview.targetRotation)
+//                .build()
 
             val useCaseGroup = UseCaseGroup.Builder()
                 .addUseCase(preview)
                 .addUseCase(imageAnalyzer)
                 .addUseCase(imageCapture!!)
-                .setViewPort(viewPort)
+                //.setViewPort(viewPort)
                 .build()
 
             try {
